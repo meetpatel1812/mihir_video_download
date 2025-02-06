@@ -4,7 +4,7 @@ import streamlit as st
 import yt_dlp
 
 # Define path to FFmpeg binary (must be uploaded to "bin/")
-FFMPEG_PATH = "./bin"
+FFMPEG_PATH = "./bin/ffmpeg"
 
 # Ensure FFmpeg has execute permissions
 if not os.access(FFMPEG_PATH, os.X_OK):
@@ -23,17 +23,21 @@ def download_video(url):
             'outtmpl': 'vimeo_%(title)s.%(ext)s',
             'quiet': False,
             'no_warnings': True,
-            'cookiefile': cookie_file  # Load Vimeo session cookies
+            'cookiefile': cookie_file  # Uncomment if using cookies for Vimeo
         }
-    
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
             if not info_dict:
                 st.error("❌ Failed to download video.")
                 return None
-        
+
         video_filename = ydl.prepare_filename(info_dict)
         return video_filename
+
+    except Exception as e:
+        st.error(f"❌ Error: {str(e)}")
+        return None
 
 if video_url:
     if st.button("⬇️ Download Video"):
@@ -63,3 +67,5 @@ if video_url:
                     else:
                         st.error("❌ Video conversion failed. See logs:")
                         st.text(process.stderr)
+        else:
+            st.error("❌ Video download failed. Please check the URL.")
