@@ -4,7 +4,7 @@ import streamlit as st
 import yt_dlp
 
 # Define path to FFmpeg binary (uploaded to "bin/")
-FFMPEG_PATH = "./bin/ffmpeg"
+FFMPEG_PATH = "./bin/ffmpeg.exe"
 
 # Ensure FFmpeg has execute permissions
 if not os.access(FFMPEG_PATH, os.X_OK):
