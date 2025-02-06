@@ -69,13 +69,24 @@ cookie_file = "cookies.txt"  # Ensure this file exists
 
 def download_video(url):
     try:
+        # ydl_opts = {
+        #     'format': 'bestvideo+bestaudio/best',
+        #     'outtmpl': 'vimeo_%(title)s.%(ext)s',
+        #     'quiet': False,
+        #     'no_warnings': True,
+        #     'cookiefile': cookie_file  # Load Vimeo session cookies
+        # }
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
-            'outtmpl': 'vimeo_%(title)s.%(ext)s',
-            'quiet': False,
-            'no_warnings': True,
-            'cookiefile': cookie_file  # Load Vimeo session cookies
-        }
+    'format': 'bestvideo+bestaudio/best',
+    'outtmpl': 'vimeo_%(title)s.%(ext)s',
+    'quiet': False,
+    'no_warnings': True,
+    'cookiefile': cookie_file,
+    'postprocessors': [{
+        'key': 'FFmpegMergerPP',
+        'preferredformat': 'mp4',
+    }],
+}
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=False)
