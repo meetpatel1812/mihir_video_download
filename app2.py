@@ -77,15 +77,12 @@ def download_video(url):
         #     'cookiefile': cookie_file  # Load Vimeo session cookies
         # }
         ydl_opts = {
-    'format': 'bestvideo+bestaudio/best',
+    'format': 'bv*+ba/best',  # Picks the best available single file format
     'outtmpl': 'vimeo_%(title)s.%(ext)s',
     'quiet': False,
     'no_warnings': True,
     'cookiefile': cookie_file,
-    'postprocessors': [{
-        'key': 'FFmpegMergerPP',
-        'preferredformat': 'mp4',
-    }],
+    'merge_output_format': 'mp4'  # Ensures output is in MP4 format
 }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
