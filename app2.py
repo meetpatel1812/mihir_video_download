@@ -17,12 +17,13 @@ video_url = st.text_input("🔗 Enter Video URL (YouTube, Vimeo, etc.)")
 
 # Function to download video using yt-dlp
 def download_video(url):
-    ydl_opts = {
-        'format': 'bestvideo+bestaudio/best',
-        'outtmpl': 'downloaded_video.%(ext)s',
-        'quiet': False,
-        'no_warnings': True
-    }
+     ydl_opts = {
+            'format': 'bestvideo+bestaudio/best',
+            'outtmpl': 'vimeo_%(title)s.%(ext)s',
+            'quiet': False,
+            'no_warnings': True,
+            'cookiefile': cookie_file  # Load Vimeo session cookies
+        }
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(url, download=True)
