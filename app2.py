@@ -3,7 +3,7 @@ import subprocess
 import streamlit as st
 import yt_dlp
 
-# Define path to FFmpeg binary (must be uploaded to "bin/")
+# Define path to FFmpeg binary (uploaded to "bin/")
 FFMPEG_PATH = "./bin/ffmpeg"
 
 # Ensure FFmpeg has execute permissions
@@ -20,10 +20,10 @@ def download_video(url):
     try:
         ydl_opts = {
             'format': 'bestvideo+bestaudio/best',
-            'outtmpl': 'vimeo_%(title)s.%(ext)s',
+            'outtmpl': 'downloaded_video.%(ext)s',
             'quiet': False,
-            'no_warnings': True,
-            'cookiefile': cookie_file.txt  # Uncomment if using cookies for Vimeo
+            'merge_output_format': 'mp4',  # Ensure merging happens in MP4 format
+            'ffmpeg_location': FFMPEG_PATH  # Explicitly specify FFmpeg path
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
