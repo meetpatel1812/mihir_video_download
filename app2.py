@@ -23,7 +23,7 @@ def download_video(url):
             'outtmpl': 'vimeo_%(title)s.%(ext)s',
             'quiet': False,
             'no_warnings': True,
-            'cookiefile': cookie_file  # Uncomment if using cookies for Vimeo
+            'cookiefile': cookie_file.txt  # Uncomment if using cookies for Vimeo
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
