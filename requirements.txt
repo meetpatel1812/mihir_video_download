@@ -1,2 +1,6 @@
 streamlit
 yt-dlp
+imageio[ffmpeg]
+ffmpeg-python
+yt-dlp
+streamlit
