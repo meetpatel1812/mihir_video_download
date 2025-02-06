@@ -1,127 +1,53 @@
-# import streamlit as st
-# import yt_dlp
-# import os
-
-# st.title("🎬 Vimeo Private Video Downloader")
-
-# video_url = st.text_input("Enter Vimeo Video URL:")
-# cookie_file = "cookies.txt"  # Ensure this file exists
-
-# def download_video(url):
-#     try:
-#         ydl_opts = {
-#             'format': 'bestvideo+bestaudio/best',
-#             'outtmpl': 'vimeo_%(title)s.%(ext)s',
-#             'quiet': False,
-#             'no_warnings': True,
-#             'cookiefile': cookie_file  # Load Vimeo session cookies
-#         }
-
-#         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-#             info_dict = ydl.extract_info(url, download=False)
-            
-#             if not info_dict:
-#                 st.error("Could not extract video information. The video may be private or restricted.")
-#                 return None
-
-#             video_title = info_dict.get('title', 'vimeo_video')
-#             video_filename = ydl.prepare_filename(info_dict)
-
-#             st.write(f"**Video Title:** {video_title}")
-            
-#             if 'thumbnail' in info_dict:
-#                 st.image(info_dict['thumbnail'], caption="Thumbnail", use_column_width=True)
-
-#             if st.button("Download Video"):
-#                 with st.spinner(f"Downloading {video_title}..."):
-#                     ydl.download([url])
-
-#                 if os.path.exists(video_filename):
-#                     with open(video_filename, "rb") as f:
-#                         st.success("✅ Download complete!")
-#                         st.download_button(
-#                             "Save Video",
-#                             data=f,
-#                             file_name=os.path.basename(video_filename),
-#                             mime="video/mp4"
-#                         )
-#                     os.remove(video_filename)
-#                 else:
-#                     st.error("❌ Download failed. The video might be restricted or unavailable.")
-
-#     except Exception as e:
-#         st.error(f"⚠️ Error: {str(e)}")
-
-# if video_url:
-#     download_video(video_url)
-
-
-
-import streamlit as st
-import yt_dlp
 import os
-import ffmpeg  # ffmpeg-python wrapper
+import subprocess
+import streamlit as st
 
-st.title("🎬 Vimeo Private Video Downloader")
+# Define path to FFmpeg binary
+FFMPEG_PATH = "./bin/ffmpeg"  # FFmpeg must be pre-downloaded and stored in 'bin/'
 
-video_url = st.text_input("Enter Vimeo Video URL:")
-cookie_file = "cookies.txt"  # Ensure this file exists
+# Ensure FFmpeg has execute permissions
+if not os.access(FFMPEG_PATH, os.X_OK):
+    os.chmod(FFMPEG_PATH, 0o755)
 
-def download_video(url):
-    try:
-        # ydl_opts = {
-        #     'format': 'bestvideo+bestaudio/best',
-        #     'outtmpl': 'vimeo_%(title)s.%(ext)s',
-        #     'quiet': False,
-        #     'no_warnings': True,
-        #     'cookiefile': cookie_file  # Load Vimeo session cookies
-        # }
-        ydl_opts = {
-    'format': 'bv*+ba/best',  # Picks the best available single file format
-    'outtmpl': 'vimeo_%(title)s.%(ext)s',
-    'quiet': False,
-    'no_warnings': True,
-    'cookiefile': cookie_file,
-    'merge_output_format': 'mp4'  # Ensures output is in MP4 format
-}
+st.title("🎬 FFmpeg Video Processor in Streamlit Cloud")
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(url, download=False)
-            if not info_dict:
-                st.error("Could not extract video information. The video may be private or restricted.")
-                return None
+# Test if FFmpeg is working
+try:
+    result = subprocess.run([FFMPEG_PATH, "-version"], capture_output=True, text=True)
+    st.text(result.stdout)
+except Exception as e:
+    st.error(f"FFmpeg execution failed: {e}")
 
-            video_title = info_dict.get('title', 'vimeo_video')
-            video_filename = ydl.prepare_filename(info_dict)
+# Upload video file
+uploaded_file = st.file_uploader("📤 Upload a Video File", type=["mp4", "mkv", "avi", "mov"])
 
-            st.write(f"**Video Title:** {video_title}")
-            
-            if 'thumbnail' in info_dict:
-                st.image(info_dict['thumbnail'], caption="Thumbnail", use_column_width=True)
+if uploaded_file is not None:
+    input_video_path = f"input_{uploaded_file.name}"
+    
+    # Save uploaded video locally
+    with open(input_video_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
 
-            if st.button("Download Video"):
-                with st.spinner(f"Downloading {video_title}..."):
-                    ydl.download([url])
+    st.success(f"✅ Uploaded: {uploaded_file.name}")
 
-                output_file = f"{video_title}.mp4"
-                ffmpeg.input(video_filename).output(output_file, vcodec='libx264').run()
+    # Convert video using FFmpeg
+    output_video_path = f"converted_{uploaded_file.name}"
+    
+    if st.button("🎥 Convert to MP4"):
+        with st.spinner("Processing video..."):
+            cmd = [FFMPEG_PATH, "-i", input_video_path, "-c:v", "libx264", output_video_path]
+            process = subprocess.run(cmd, capture_output=True, text=True)
 
-                if os.path.exists(output_file):
-                    with open(output_file, "rb") as f:
-                        st.success("✅ Download complete!")
-                        st.download_button(
-                            "Save Video",
-                            data=f,
-                            file_name=os.path.basename(output_file),
-                            mime="video/mp4"
-                        )
-                    os.remove(video_filename)
-                    os.remove(output_file)
-                else:
-                    st.error("❌ Download failed. The video might be restricted or unavailable.")
-
-    except Exception as e:
-        st.error(f"⚠️ Error: {str(e)}")
-
-if video_url:
-    download_video(video_url)
+            if process.returncode == 0:
+                st.success("✅ Video conversion successful!")
+                
+                # Provide download button
+                with open(output_video_path, "rb") as f:
+                    st.download_button("⬇️ Download Converted Video", data=f, file_name=output_video_path, mime="video/mp4")
+                
+                # Cleanup files
+                os.remove(input_video_path)
+                os.remove(output_video_path)
+            else:
+                st.error("❌ Video conversion failed. See logs:")
+                st.text(process.stderr)
